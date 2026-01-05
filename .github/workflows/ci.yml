@@ -50,8 +50,32 @@ jobs:
         run: |
           docker push ghcr.io/${{ github.repository }}:${{ github.sha }}
           docker push ghcr.io/${{ github.repository }}:latest
-  deploy:
-    name: Deploy to Render
+
+  deploy-staging:
+    name: Deploy to Render Staging environment
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.ref == 'refs/heads/staging'  # Alleen op staging branch
+
+    steps:
+      - name: Trigger Render Deploy
+        run: |
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_STAGING }}"
+          echo "Deployment triggered for staging env!"
+      
+      - name: Wait for staging deployment
+        run: |
+          echo "Deployment started. Check Render dashboard for status."
+          echo "URL: https://devops-app-ivan-staging.onrender.com"
+      - name: Wait for staging deployment to be live
+        run: |
+          echo "Waiting for staging deployment..."
+          sleep 120
+          curl -f https://devops-app-ivan-staging.onrender.com/health || exit 1
+          echo "Deployment to staging env successful!"        
+  
+  deploy-prod:
+    name: Deploy to Render Production environment
     runs-on: ubuntu-latest
     needs: build-and-push
     if: github.ref == 'refs/heads/main'  # Alleen op main branch
@@ -62,13 +86,13 @@ jobs:
           curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
           echo "Deployment triggered!"
       
-      - name: Wait for deployment
+      - name: Wait for prod deployment
         run: |
           echo "Deployment started. Check Render dashboard for status."
           echo "URL: https://devops-app-ivan.onrender.com"
       - name: Wait for deployment to be live
         run: |
-          echo "Waiting for deployment..."
+          echo "Waiting for prod deployment..."
           sleep 120
           curl -f https://devops-app-ivan.onrender.com/health || exit 1
-          echo "Deployment successful!"
+          echo "Deployment prod env successful!"
