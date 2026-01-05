@@ -9,7 +9,7 @@ app.use(express.json());
 app.get('/', (req, res) => {
   res.json({
     message: 'Welcome to the Les 6 API!',
-    version: process.env.APP_VERSION || '1.2.0',
+    version: process.env.APP_VERSION || '1.3.0',
     environment: process.env.NODE_ENV || 'development'
   });
 });
@@ -19,7 +19,7 @@ app.get('/health', (req, res) => {
     status: 'healthy',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    version: process.env.APP_VERSION || '1.2.0'
+    version: process.env.APP_VERSION || '1.3.0'
   });
 });
 

@@ -66,3 +66,9 @@ jobs:
         run: |
           echo "Deployment started. Check Render dashboard for status."
           echo "URL: https://devops-app-ivan.onrender.com"
+      - name: Wait for deployment to be live
+        run: |
+          echo "Waiting for deployment..."
+          sleep 120
+          curl -f https://devops-app-ivan.onrender.com/health || exit 1
+          echo "Deployment successful!"
