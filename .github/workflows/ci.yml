@@ -1,7 +1,4 @@
-# Startpunt CI Workflow
-# TODO: Breid uit naar multi-job workflow met Docker build & push
-
-name: CI
+name: CI/CD Pipeline
 
 on:
   push:
@@ -12,7 +9,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -32,14 +28,25 @@ jobs:
       - name: Run tests
         run: npm test
 
-  # TODO: Voeg build job toe
-  # build:
-  #   needs: test
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     packages: write
-  #   steps:
-  #     - Checkout
-  #     - Login to GHCR
-  #     - Build Docker image
-  #     - Push to GHCR
+  build-and-push:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build Docker image
+        run: |
+          docker build -t ghcr.io/${{ github.repository }}:${{ github.sha }} .
+          docker tag ghcr.io/${{ github.repository }}:${{ github.sha }} ghcr.io/${{ github.repository }}:latest
+
+      - name: Push to GHCR
+        run: |
+          docker push ghcr.io/${{ github.repository }}:${{ github.sha }}
+          docker push ghcr.io/${{ github.repository }}:latest
